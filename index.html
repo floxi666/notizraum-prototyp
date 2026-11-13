@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f7f9">
+<title>Notizraum</title>
+<style>
+:root{--bg:#f7f7f9;--card:#fff;--ink:#24242b;--muted:#858591;--line:#e8e8ed;--accent:#5145a8;--accent-soft:#efedfb;--scale:1;--icon:1}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:calc(16px * var(--scale));}
+button,input,textarea{font:inherit} button{cursor:pointer}
+.app{max-width:760px;margin:0 auto;min-height:100dvh;padding:calc(18px + env(safe-area-inset-top)) 17px calc(28px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:8px 0 22px}
+.date{font-size:.72em;letter-spacing:.11em;color:var(--muted);text-transform:uppercase;font-weight:650}
+h1{font-size:1.8em;line-height:1.15;margin:9px 0 3px;letter-spacing:-.045em}
+.name{font-size:1.05em;color:#686875}
+.actions{display:flex;gap:8px}
+.iconbtn{width:42px;height:42px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);display:grid;place-items:center;font-size:calc(19px * var(--icon))}
+.quote{background:var(--accent-soft);border:1px solid #e5e1fa;border-radius:18px;padding:17px 18px;margin-bottom:19px;text-align:center}
+.quote .qmark{font-size:20px;color:var(--accent)} .quote p{margin:7px 0 4px;font-size:.98em;font-weight:550;line-height:1.45}.quote small{color:var(--muted);font-size:.75em}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:19px;padding:18px 16px;text-align:left;min-height:118px;color:var(--ink);box-shadow:0 3px 14px #1c1c2810}
+.tile .symbol{font-size:calc(25px * var(--icon));display:block;margin-bottom:13px;color:var(--accent)}.tile strong{display:block;font-size:1em}.tile small{display:block;color:var(--muted);margin-top:5px;line-height:1.35}
+.sectionhead{display:flex;align-items:center;justify-content:space-between;margin:8px 2px 10px}.sectionhead span{font-size:.72em;letter-spacing:.1em;color:var(--muted);font-weight:700}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 1px 10px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 12px;color:#656572;font-size:.83em}.tab.active{background:var(--accent);color:white;border-color:var(--accent)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:19px;padding:17px;margin-top:12px}
+.hidden{display:none!important}
+.back{border:0;background:none;color:var(--accent);padding:5px 0 14px;font-weight:650}
+.panel h2{font-size:1.35em;letter-spacing:-.03em;margin:0 0 13px}
+.field{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;color:var(--ink);outline:none}
+.field:focus{border-color:#a49bdc}
+textarea.field{min-height:180px;resize:vertical;line-height:1.55}
+.row{display:flex;gap:9px;align-items:center}.row>*{min-width:0}
+.primary{border:0;background:var(--accent);color:#fff;border-radius:12px;padding:12px 16px;font-weight:650}
+.secondary{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:12px;padding:11px 14px}
+.noteitem{padding:13px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}.noteitem:last-child{border-bottom:0}.noteitem button{border:0;background:none;text-align:left;color:var(--ink);padding:0;flex:1}.muted{color:var(--muted);font-size:.83em}
+.checkrow{display:flex;gap:10px;align-items:center;margin:10px 0}.checkrow input{width:19px;height:19px;accent-color:var(--accent)}
+.calendar-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.calendar-top strong{font-size:1.05em}
+.day{border-top:1px solid var(--line);padding:12px 0}.dayhead{display:flex;justify-content:space-between;align-items:center}.dayhead strong{font-size:.95em}.day textarea{margin-top:8px;min-height:54px;resize:vertical;font-size:.88em}
+.sides{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.sides textarea{min-height:95px;font-size:.85em}
+.settingrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.settingrow:last-child{border:0}
+input[type=range]{width:125px;accent-color:var(--accent)}
+footer{margin-top:24px;color:var(--muted);font-size:.72em;text-align:center}
+@media(min-width:600px){.app{padding-left:26px;padding-right:26px}.tile{min-height:135px;padding:21px}.panel{padding:22px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+ <div><div class="date" id="today"></div><h1 id="greeting">Guten Tag!</h1><div class="name" id="welcomeName">Dein persönlicher Notizraum</div></div>
+ <div class="actions"><button class="iconbtn" aria-label="Suchen" onclick="showSearch()">⌕</button><button class="iconbtn" aria-label="Einstellungen" onclick="showSettings()">☷</button></div>
+</header>
+<div class="quote"><div class="qmark">“</div><p id="quoteText"></p><small>Dein Gedanke für heute</small></div>
+<div class="tiles">
+ <button class="tile" onclick="newNote()"><span class="symbol">＋</span><strong>Neue Notiz</strong><small>Gedanken festhalten und Listen erstellen</small></button>
+ <button class="tile" onclick="showCalendar()"><span class="symbol">▦</span><strong>Kalender</strong><small>Deine Woche und persönliche Notizen</small></button>
+</div>
+<div class="sectionhead"><span>GEÖFFNETE NOTIZEN</span><button class="secondary" style="padding:7px 10px;font-size:.78em" onclick="newNote()">＋ Neu</button></div>
+<div class="tabs" id="tabs"><span class="muted">Noch keine geöffneten Notizen</span></div>
+
+<section id="homePanel" class="panel">
+ <h2>Dein Notizraum</h2>
+ <p class="muted">Hier erscheinen deine geöffneten Notizen. Erstelle deine erste Notiz über „Neue Notiz“.</p>
+</section>
+<section id="notePanel" class="panel hidden">
+ <button class="back" onclick="goHome()">← Übersicht</button>
+ <input class="field" id="noteTitle" placeholder="Titel deiner Notiz" oninput="saveCurrent()">
+ <div class="row" style="margin:12px 0"><button class="secondary" onclick="addChecklist()">☑ Checkliste einfügen</button><button class="secondary" onclick="deleteCurrent()">Löschen</button></div>
+ <textarea class="field" id="noteBody" placeholder="Schreibe deine Gedanken auf …" oninput="saveCurrent()"></textarea>
+ <div id="checklist" style="margin-top:12px"></div>
+ <p class="muted" id="savedStatus">Lokal auf diesem Gerät gespeichert.</p>
+</section>
+<section id="calendarPanel" class="panel hidden">
+ <button class="back" onclick="goHome()">← Übersicht</button>
+ <div class="calendar-top"><button class="secondary" onclick="shiftWeek(-1)">‹ Zurück</button><strong id="weekLabel"></strong><button class="secondary" onclick="shiftWeek(1)">Weiter ›</button></div>
+ <div class="muted" style="margin-bottom:8px">Wische auf dem Kalender nach links oder rechts, um die Woche zu wechseln.</div>
+ <div id="days" ontouchstart="touchStart(event)" ontouchend="touchEnd(event)"></div>
+ <div class="sides"><div><strong style="font-size:.82em">LINKES NOTIZBLATT</strong><textarea class="field" id="leftNote" placeholder="Deine Gedanken …" oninput="saveWeekNotes()"></textarea></div><div><strong style="font-size:.82em">RECHTES NOTIZBLATT</strong><textarea class="field" id="rightNote" placeholder="Weitere Notizen …" oninput="saveWeekNotes()"></textarea></div></div>
+</section>
+<section id="searchPanel" class="panel hidden">
+ <button class="back" onclick="goHome()">← Übersicht</button><h2>Suche</h2>
+ <input class="field" id="searchInput" placeholder="Notizen durchsuchen …" oninput="renderSearch()">
+ <div id="searchResults"></div>
+</section>
+<section id="settingsPanel" class="panel hidden">
+ <button class="back" onclick="goHome()">← Übersicht</button><h2>Einstellungen</h2>
+ <div class="settingrow"><label for="userName">Dein Name</label><input class="field" id="userName" style="max-width:58%" placeholder="Name"></div>
+ <div class="settingrow"><label for="fontSize">Schriftgröße</label><input id="fontSize" type="range" min="0.9" max="1.3" step=".05" oninput="setScale()"></div>
+ <div class="settingrow"><label for="iconSize">Icon-Größe</label><input id="iconSize" type="range" min=".85" max="1.4" step=".05" oninput="setIconScale()"></div>
+ <div class="settingrow"><label for="theme">Darstellung</label><select class="field" id="theme" style="max-width:55%" onchange="setTheme()"><option value="light">Hell</option><option value="dark">Dunkel</option></select></div>
+ <h2 style="margin-top:20px">Datensicherung</h2>
+ <p class="muted">Deine Daten bleiben lokal. Exportiere regelmäßig eine Sicherungsdatei, um sie außerhalb des iPhones aufzubewahren.</p>
+ <div class="row"><button class="primary" onclick="exportData()">Backup exportieren</button><button class="secondary" onclick="document.getElementById('importFile').click()">Backup importieren</button><input id="importFile" type="file" accept="application/json" hidden onchange="importData(event)"></div>
+ <h2 style="margin-top:22px">Spätere Erweiterungen</h2>
+ <div class="settingrow"><span>iCloud-Synchronisierung</span><span class="muted">Geplant</span></div>
+ <div class="settingrow"><span>Android / Google-Synchronisierung</span><span class="muted">Geplant</span></div>
+ <div class="settingrow"><span>Eigene Cloud</span><span class="muted">Geplant</span></div>
+ <p class="muted">Diese Verbindungen sind in Version 0.1 nicht aktiv. Es werden keine Daten an einen Server übertragen.</p>
+</section>
+<footer>Notizraum · Version 0.1 · Deine Daten bleiben auf diesem Gerät</footer>
+</div>
+<script>
+const KEY='notizraum_v01';
+const quotes=['Kleine Schritte führen zu großen Veränderungen.','Du musst nicht alles heute schaffen.','Ein ruhiger Moment kann der Anfang einer guten Idee sein.','Fortschritt ist besser als Perfektion.','Gib deinen Gedanken Raum.','Manchmal ist weniger genau das Richtige.','Jeder neue Tag ist eine neue Seite.'];
+let data={name:'',notes:[],open:[],settings:{font:1,icon:1,theme:'light'},weekNotes:{}};
+let currentId=null, weekOffset=0, touchX=0;
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d)data={...data,...d,settings:{...data.settings,...(d.settings||{})}}}catch(e){}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(data));}
+function todayDate(){return new Date()}
+function fmt(d,opt){return new Intl.DateTimeFormat('de-DE',opt).format(d)}
+function init(){load();const d=todayDate();document.getElementById('today').textContent=fmt(d,{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();document.getElementById('quoteText').textContent=quotes[Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86400000))%quotes.length];document.getElementById('userName').value=data.name||'';document.getElementById('userName').addEventListener('input',e=>{data.name=e.target.value;persist();updateGreeting()});document.getElementById('fontSize').value=data.settings.font;document.getElementById('iconSize').value=data.settings.icon;document.getElementById('theme').value=data.settings.theme;applySettings();updateGreeting();renderTabs();}
+function updateGreeting(){document.getElementById('greeting').textContent='Guten '+(new Date().getHours()<11?'Morgen':new Date().getHours()<18?'Tag':'Abend')+'!';document.getElementById('welcomeName').textContent=data.name?data.name:'Dein persönlicher Notizraum'}
+function hidePanels(){['homePanel','notePanel','calendarPanel','searchPanel','settingsPanel'].forEach(id=>document.getElementById(id).classList.add('hidden'))}
+function goHome(){hidePanels();document.getElementById('homePanel').classList.remove('hidden');renderTabs()}
+function showSettings(){hidePanels();document.getElementById('settingsPanel').classList.remove('hidden')}
+function showSearch(){hidePanels();document.getElementById('searchPanel').classList.remove('hidden');document.getElementById('searchInput').focus()}
+function showCalendar(){hidePanels();document.getElementById('calendarPanel').classList.remove('hidden');renderCalendar()}
+function newNote(){const n={id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),title:'',body:'',checks:[]};data.notes.unshift(n);openNote(n.id)}
+function openNote(id){currentId=id;if(!data.open.includes(id))data.open.push(id);if(data.open.length>5)data.open.shift();persist();hidePanels();document.getElementById('notePanel').classList.remove('hidden');const n=data.notes.find(x=>x.id===id);document.getElementById('noteTitle').value=n.title;document.getElementById('noteBody').value=n.body;renderChecks();renderTabs()}
+function saveCurrent(){const n=data.notes.find(x=>x.id===currentId);if(!n)return;n.title=document.getElementById('noteTitle').value;n.body=document.getElementById('noteBody').value;persist();renderTabs();document.getElementById('savedStatus').textContent='Gespeichert · '+fmt(new Date(),{hour:'2-digit',minute:'2-digit'})}
+function renderTabs(){const el=document.getElementById('tabs');el.innerHTML='';const list=data.open.map(id=>data.notes.find(n=>n.id===id)).filter(Boolean);if(!list.length){el.innerHTML='<span class="muted">Noch keine geöffneten Notizen</span>';return}list.forEach(n=>{const b=document.createElement('button');b.className='tab '+(n.id===currentId?'active':'');b.textContent=(n.title||'Unbenannte Notiz').slice(0,22);b.onclick=()=>openNote(n.id);el.appendChild(b)})}
+function deleteCurrent(){if(!confirm('Diese Notiz wirklich löschen?'))return;data.notes=data.notes.filter(n=>n.id!==currentId);data.open=data.open.filter(id=>id!==currentId);currentId=null;persist();goHome()}
+function addChecklist(){const n=data.notes.find(x=>x.id===currentId);if(!n)return;n.checks=n.checks||[];n.checks.push({text:'',done:false});persist();renderChecks()}
+function renderChecks(){const n=data.notes.find(x=>x.id===currentId);const el=document.getElementById('checklist');el.innerHTML='';(n?.checks||[]).forEach((c,i)=>{const row=document.createElement('div');row.className='checkrow';const cb=document.createElement('input');cb.type='checkbox';cb.checked=c.done;cb.onchange=()=>{c.done=cb.checked;persist()};const inp=document.createElement('input');inp.className='field';inp.placeholder='Listenpunkt';inp.value=c.text;inp.oninput=()=>{c.text=inp.value;persist()};const del=document.createElement('button');del.className='secondary';del.textContent='×';del.onclick=()=>{n.checks.splice(i,1);persist();renderChecks()};row.append(cb,inp,del);el.appendChild(row)})}
+function renderSearch(){const q=document.getElementById('searchInput').value.toLowerCase();const el=document.getElementById('searchResults');el.innerHTML='';data.notes.filter(n=>(n.title+' '+n.body+' '+(n.checks||[]).map(c=>c.text).join(' ')).toLowerCase().includes(q)).forEach(n=>{const b=document.createElement('button');b.className='noteitem';b.textContent=(n.title||'Unbenannte Notiz')+' — '+(n.body||'').slice(0,55);b.onclick=()=>openNote(n.id);el.appendChild(b)})}
+function startOfWeek(date){const d=new Date(date);d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d}
+function weekKey(){const d=startOfWeek(new Date());d.setDate(d.getDate()+weekOffset*7);return d.toISOString().slice(0,10)}
+function renderCalendar(){const start=startOfWeek(new Date());start.setDate(start.getDate()+weekOffset*7);const end=new Date(start);end.setDate(end.getDate()+6);document.getElementById('weekLabel').textContent=fmt(start,{day:'2-digit',month:'short'})+' – '+fmt(end,{day:'2-digit',month:'short',year:'numeric'});const key=weekKey(), saved=data.weekNotes[key]||{};document.getElementById('leftNote').value=saved.left||'';document.getElementById('rightNote').value=saved.right||'';const el=document.getElementById('days');el.innerHTML='';for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const k=d.toISOString().slice(0,10);const wrap=document.createElement('div');wrap.className='day';const head=document.createElement('div');head.className='dayhead';const strong=document.createElement('strong');strong.textContent=fmt(d,{weekday:'long',day:'2-digit',month:'long'});const small=document.createElement('span');small.className='muted';small.textContent=i===0?'WOCHENSTART':'';head.append(strong,small);const ta=document.createElement('textarea');ta.className='field';ta.placeholder='Notizen für diesen Tag …';ta.value=(saved.days||{})[k]||'';ta.oninput=()=>{data.weekNotes[key]=data.weekNotes[key]||{days:{}};data.weekNotes[key].days[k]=ta.value;persist()};wrap.append(head,ta);el.appendChild(wrap)}}
+function saveWeekNotes(){const key=weekKey();data.weekNotes[key]=data.weekNotes[key]||{days:{}};data.weekNotes[key].left=document.getElementById('leftNote').value;data.weekNotes[key].right=document.getElementById('rightNote').value;persist()}
+function shiftWeek(n){weekOffset+=n;renderCalendar()}
+function touchStart(e){touchX=e.changedTouches[0].screenX}function touchEnd(e){const dx=e.changedTouches[0].screenX-touchX;if(Math.abs(dx)>55)shiftWeek(dx<0?1:-1)}
+function setScale(){data.settings.font=+document.getElementById('fontSize').value;applySettings();persist()}function setIconScale(){data.settings.icon=+document.getElementById('iconSize').value;applySettings();persist()}function setTheme(){data.settings.theme=document.getElementById('theme').value;applySettings();persist()}
+function applySettings(){document.documentElement.style.setProperty('--scale',data.settings.font||1);document.documentElement.style.setProperty('--icon',data.settings.icon||1);if(data.settings.theme==='dark'){document.documentElement.style.setProperty('--bg','#17171d');document.documentElement.style.setProperty('--card','#24242d');document.documentElement.style.setProperty('--ink','#f2f2f5');document.documentElement.style.setProperty('--muted','#aaaab5');document.documentElement.style.setProperty('--line','#3b3b46')}else{document.documentElement.style.setProperty('--bg','#f7f7f9');document.documentElement.style.setProperty('--card','#fff');document.documentElement.style.setProperty('--ink','#24242b');document.documentElement.style.setProperty('--muted','#858591');document.documentElement.style.setProperty('--line','#e8e8ed')}}
+function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='notizraum-backup.json';a.click();URL.revokeObjectURL(url)}
+function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d||!Array.isArray(d.notes))throw Error();data={...data,...d};persist();location.reload()}catch(err){alert('Diese Sicherungsdatei konnte nicht gelesen werden.')}};r.readAsText(f)}
+init();
+</script>
+</body></html>
